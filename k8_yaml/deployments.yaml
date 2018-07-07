@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pr-status
+spec:
+  selector:
+    matchLabels:
+      app: pr-status
+  replicas: 1
+
+  template:
+    metadata:
+      labels:
+        app: pr-status
+    spec:
+      containers:
+      - name: pr-status
+        image: staneja90/pr-status:1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        env:
+        - name: GITHUB_USERNAME
+          value: "stanej"
+        - name: GITHUB_REPO_OWNER
+          value: "fluent"
+        - name: GITHUB_REPO_NAME
+          value: "fluentd"
+        - name: GITHUB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: github-password
+              key: options
+        readinessProbe:
+        resources:
+           requests:
+             cpu: "500m"
+

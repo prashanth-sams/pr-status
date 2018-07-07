@@ -1,0 +1,55 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "pr-status.fullname" . }}
+  labels:
+    app: {{ template "pr-status.name" . }}
+    chart: {{ template "pr-status.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "pr-status.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "pr-status.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          env:
+            - name: GITHUB_USERNAME
+              value: {{ .Values.GITHUB_USERNAME }}
+            - name: GITHUB_REPO_OWNER
+              value: {{ .Values.GITHUB_REPO_OWNER }}
+            - name: GITHUB_REPO_NAME
+              value: {{ .Values.GITHUB_REPO_NAME }}
+            - name: GITHUB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: github-password
+                  key: password
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
